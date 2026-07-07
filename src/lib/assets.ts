@@ -12,3 +12,13 @@ export function cssAssetPath(path: string): string {
 
   return new URL(resolved, window.location.href).pathname;
 }
+
+export function absoluteAssetUrl(path: string): string {
+  const resolved = assetPath(path);
+
+  if (typeof window === "undefined") {
+    return resolved;
+  }
+
+  return new URL(resolved, window.location.href).href;
+}

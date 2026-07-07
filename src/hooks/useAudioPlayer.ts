@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { tracks } from "../data/tracks";
+import { absoluteAssetUrl } from "../lib/assets";
 import { getNextTrackIndex, getPreviousTrackIndex } from "../lib/player";
+
+const artworkUrl = () => absoluteAssetUrl("assets/images/rogue-background.png");
 
 export function useAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shouldResumeRef = useRef(false);
+  const currentTimeRef = useRef(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
   const currentTrack = tracks[currentIndex];
+
+  useEffect(() => {
+    currentTimeRef.current = currentTime;
+  }, [currentTime]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -64,11 +72,42 @@ export function useAudioPlayer() {
 
     if (shouldResumeRef.current) {
       shouldResumeRef.current = false;
-      void audio.play().catch(() => {
-        setIsPlaying(false);
-      });
+      let didRequestPlayback = false;
+      const resumePlayback = () => {
+        if (didRequestPlayback) {
+          return;
+        }
+
+        didRequestPlayback = true;
+        void audio.play().catch(() => {
+          setIsPlaying(false);
+        });
+      };
+      const resumeTimer = window.setTimeout(resumePlayback, 0);
+
+      audio.addEventListener("canplay", resumePlayback, { once: true });
+
+      return () => {
+        window.clearTimeout(resumeTimer);
+        audio.removeEventListener("canplay", resumePlayback);
+      };
     }
   }, [currentIndex]);
+
+  const play = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    void audio.play().catch(() => {
+      setIsPlaying(false);
+    });
+  }, []);
+
+  const pause = useCallback(() => {
+    audioRef.current?.pause();
+  }, []);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -77,13 +116,11 @@ export function useAudioPlayer() {
     }
 
     if (audio.paused) {
-      void audio.play().catch(() => {
-        setIsPlaying(false);
-      });
+      play();
     } else {
-      audio.pause();
+      pause();
     }
-  }, []);
+  }, [pause, play]);
 
   const playTrack = useCallback((index: number) => {
     shouldResumeRef.current = true;
@@ -91,11 +128,23 @@ export function useAudioPlayer() {
   }, []);
 
   const previous = useCallback(() => {
+    shouldResumeRef.current = true;
     setCurrentIndex((index) => getPreviousTrackIndex(index));
   }, []);
 
   const next = useCallback(() => {
+    shouldResumeRef.current = true;
     setCurrentIndex((index) => getNextTrackIndex(index, tracks.length));
+  }, []);
+
+  const seekToSeconds = useCallback((seconds: number) => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) {
+      return;
+    }
+
+    audio.currentTime = Math.min(Math.max(seconds, 0), audio.duration);
+    setCurrentTime(audio.currentTime);
   }, []);
 
   const seekToPercent = useCallback((percent: number) => {
@@ -108,6 +157,66 @@ export function useAudioPlayer() {
     setCurrentTime(audio.currentTime);
   }, []);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.title = currentTrack.title;
+    }
+
+    if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") {
+      return;
+    }
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.title,
+      artist: "the rogue orchestra",
+      album: "the rogue orchestra",
+      artwork: [
+        {
+          src: artworkUrl(),
+          sizes: "853x1844",
+          type: "image/png"
+        }
+      ]
+    });
+  }, [currentTrack]);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) {
+      return;
+    }
+
+    navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator) || !navigator.mediaSession.setActionHandler) {
+      return;
+    }
+
+    navigator.mediaSession.setActionHandler("play", play);
+    navigator.mediaSession.setActionHandler("pause", pause);
+    navigator.mediaSession.setActionHandler("previoustrack", previous);
+    navigator.mediaSession.setActionHandler("nexttrack", next);
+    navigator.mediaSession.setActionHandler("seekbackward", () => seekToSeconds(currentTimeRef.current - 10));
+    navigator.mediaSession.setActionHandler("seekforward", () => seekToSeconds(currentTimeRef.current + 10));
+    navigator.mediaSession.setActionHandler("seekto", (details) => {
+      if (typeof details.seekTime === "number") {
+        seekToSeconds(details.seekTime);
+      }
+    });
+
+    return () => {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("previoustrack", null);
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+      navigator.mediaSession.setActionHandler("seekbackward", null);
+      navigator.mediaSession.setActionHandler("seekforward", null);
+      navigator.mediaSession.setActionHandler("seekto", null);
+    };
+  }, [next, pause, play, previous, seekToSeconds]);
+
   return {
     audioRef,
     currentIndex,
@@ -116,6 +225,8 @@ export function useAudioPlayer() {
     duration,
     isPlaying,
     next,
+    pause,
+    play,
     playTrack,
     previous,
     seekToPercent,
