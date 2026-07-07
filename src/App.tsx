@@ -3,7 +3,7 @@ import { CreditText } from "./components/CreditText";
 import { Sheet } from "./components/Sheet";
 import { tracks } from "./data/tracks";
 import { useAudioPlayer } from "./hooks/useAudioPlayer";
-import { assetPath } from "./lib/assets";
+import { assetPath, cssAssetPath } from "./lib/assets";
 import { getProgressPercent } from "./lib/player";
 import { formatTime } from "./lib/time";
 import { useState } from "react";
@@ -28,13 +28,13 @@ function App() {
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   const progress = getProgressPercent(currentTime, duration || parseDuration(currentTrack.durationLabel));
   const remaining = Math.max((duration || parseDuration(currentTrack.durationLabel)) - currentTime, 0);
-  const backgroundImage = assetPath("assets/images/rogue-background.png");
+  const backgroundImage = cssAssetPath("assets/images/rogue-background.png");
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" style={{ "--background-image": `url("${backgroundImage}")` } as React.CSSProperties}>
       <div className="desktop-glow" aria-hidden="true" />
       <section className="player-frame" aria-label="the rogue orchestra music player">
-        <div className="ambient-stage" style={{ "--background-image": `url("${backgroundImage}")` } as React.CSSProperties}>
+        <div className="ambient-stage">
           <div className="ambient-image" aria-hidden="true" />
           <div className="ambient-vignette" aria-hidden="true" />
         </div>

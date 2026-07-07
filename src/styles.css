@@ -16,13 +16,14 @@
 html,
 body,
 #root {
+  height: 100%;
   min-height: 100%;
   margin: 0;
 }
 
 body {
   min-width: 320px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 button,
@@ -55,6 +56,7 @@ a {
 .app-shell {
   position: relative;
   display: grid;
+  height: 100dvh;
   min-height: 100dvh;
   align-items: center;
   justify-items: start;
@@ -70,8 +72,8 @@ a {
   background-image: var(--background-image);
   background-position: 50% 18%;
   background-size: cover;
-  filter: blur(34px) saturate(1.05);
-  opacity: 0.18;
+  filter: blur(32px) saturate(1.08);
+  opacity: 0.26;
   transform: scale(1.08);
 }
 
@@ -92,7 +94,7 @@ a {
 .ambient-stage {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: 1;
   overflow: hidden;
   background: #02080d;
 }
@@ -100,12 +102,12 @@ a {
 .ambient-image {
   position: absolute;
   inset: -2% -14% auto;
-  height: min(58dvh, 560px);
+  height: min(62dvh, 580px);
   background-image: var(--background-image);
-  background-position: 50% 0%;
+  background-position: 50% 12%;
   background-size: cover;
-  filter: saturate(0.95) contrast(1.02);
-  opacity: 0.96;
+  filter: saturate(1.02) contrast(1.04);
+  opacity: 1;
   transform-origin: 50% 20%;
   animation: ambientDrift 18s ease-in-out infinite alternate;
 }
@@ -115,8 +117,8 @@ a {
   inset: 0;
   content: "";
   background:
-    linear-gradient(180deg, rgba(2, 8, 13, 0) 42%, rgba(2, 8, 13, 0.72) 76%, #02080d 100%),
-    radial-gradient(circle at 52% 30%, rgba(255, 236, 197, 0.2), transparent 28%);
+    linear-gradient(180deg, rgba(2, 8, 13, 0) 50%, rgba(2, 8, 13, 0.58) 80%, #02080d 100%),
+    radial-gradient(circle at 52% 28%, rgba(255, 236, 197, 0.24), transparent 30%);
 }
 
 .ambient-vignette {
@@ -124,8 +126,8 @@ a {
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(2, 8, 13, 0.08) 0%, rgba(2, 8, 13, 0.18) 42%, #02080d 64%),
-    radial-gradient(circle at 50% 18%, transparent 0, rgba(1, 5, 9, 0.12) 32%, rgba(1, 5, 9, 0.74) 100%);
+    linear-gradient(180deg, rgba(2, 8, 13, 0.04) 0%, rgba(2, 8, 13, 0.1) 48%, #02080d 70%),
+    radial-gradient(circle at 50% 18%, transparent 0, rgba(1, 5, 9, 0.08) 34%, rgba(1, 5, 9, 0.68) 100%);
 }
 
 .topbar {
@@ -198,8 +200,10 @@ a {
 }
 
 .track-copy {
+  position: relative;
+  z-index: 2;
   width: min(100% - 56px, 620px);
-  margin: min(48dvh, 430px) auto 0;
+  margin: min(46dvh, 410px) auto 0;
   padding-top: 0;
   text-align: center;
 }
@@ -224,6 +228,8 @@ h1 {
 }
 
 .progress-area {
+  position: relative;
+  z-index: 2;
   width: min(100% - 64px, 620px);
   margin: 34px auto 0;
 }
@@ -289,11 +295,13 @@ h1 {
 }
 
 .controls {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: 1fr 98px 1fr;
   align-items: center;
   width: min(100% - 96px, 420px);
-  margin: 30px auto 0;
+  margin: 30px auto 22px;
 }
 
 .transport-button {
@@ -337,18 +345,19 @@ h1 {
 
 .credits-tab {
   position: relative;
+  z-index: 2;
   display: grid;
-  width: 184px;
-  min-height: 68px;
+  width: 166px;
+  min-height: 48px;
   margin: auto auto max(18px, env(safe-area-inset-bottom));
-  padding: 15px 26px 17px;
+  padding: 8px 22px 10px;
   place-items: center;
   align-content: start;
-  gap: 14px;
+  gap: 7px;
   color: rgba(255, 255, 255, 0.72);
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 30px;
+  border-radius: 24px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)),
     rgba(255, 255, 255, 0.045);
@@ -356,14 +365,14 @@ h1 {
     inset 0 1px 1px rgba(255, 255, 255, 0.18),
     0 -12px 40px rgba(0, 0, 0, 0.26);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1rem;
-  letter-spacing: 0.33em;
+  font-size: 0.82rem;
+  letter-spacing: 0.32em;
   backdrop-filter: blur(24px) saturate(1.18);
 }
 
 .credits-tab span {
-  width: 44px;
-  height: 4px;
+  width: 36px;
+  height: 3px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.46);
   box-shadow: 0 0 16px rgba(255, 255, 255, 0.28);
@@ -504,16 +513,29 @@ h1 {
 
 @media (min-width: 640px) {
   .app-shell {
-    padding: 34px;
+    padding: 14px 34px;
     place-items: center;
   }
 
   .player-frame {
     width: min(100vw, 440px);
-    height: min(900px, calc(100dvh - 68px));
-    min-height: 780px;
+    height: min(900px, calc(100dvh - 28px));
+    min-height: 0;
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 38px;
+  }
+
+  .track-copy {
+    margin-top: min(40dvh, 360px);
+  }
+
+  .progress-area {
+    margin-top: 28px;
+  }
+
+  .controls {
+    margin-top: 24px;
+    margin-bottom: 20px;
   }
 
 }
