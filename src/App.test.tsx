@@ -94,6 +94,33 @@ describe("App", () => {
     expect(mediaSession.metadata?.artwork?.[0]?.src).toContain("assets/images/rogue-background.png");
   });
 
+  it("uses lock-screen previous and next track actions instead of ten-second seek actions", () => {
+    class TestMediaMetadata {
+      constructor(metadata: MediaMetadataInit) {
+        Object.assign(this, metadata);
+      }
+    }
+
+    const mediaSession = {
+      metadata: null as MediaMetadata | null,
+      playbackState: "none" as MediaSessionPlaybackState,
+      setActionHandler: vi.fn()
+    };
+
+    vi.stubGlobal("MediaMetadata", TestMediaMetadata);
+    Object.defineProperty(window.navigator, "mediaSession", {
+      configurable: true,
+      value: mediaSession
+    });
+
+    render(<App />);
+
+    expect(mediaSession.setActionHandler).toHaveBeenCalledWith("previoustrack", expect.any(Function));
+    expect(mediaSession.setActionHandler).toHaveBeenCalledWith("nexttrack", expect.any(Function));
+    expect(mediaSession.setActionHandler).not.toHaveBeenCalledWith("seekbackward", expect.any(Function));
+    expect(mediaSession.setActionHandler).not.toHaveBeenCalledWith("seekforward", expect.any(Function));
+  });
+
   it("opens a minimal album menu with all 16 tracks and the about note", () => {
     render(<App />);
 

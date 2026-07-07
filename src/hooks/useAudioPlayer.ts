@@ -8,17 +8,12 @@ const artworkUrl = () => absoluteAssetUrl("assets/images/rogue-background.png");
 export function useAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shouldResumeRef = useRef(false);
-  const currentTimeRef = useRef(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
   const currentTrack = tracks[currentIndex];
-
-  useEffect(() => {
-    currentTimeRef.current = currentTime;
-  }, [currentTime]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -137,16 +132,6 @@ export function useAudioPlayer() {
     setCurrentIndex((index) => getNextTrackIndex(index, tracks.length));
   }, []);
 
-  const seekToSeconds = useCallback((seconds: number) => {
-    const audio = audioRef.current;
-    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) {
-      return;
-    }
-
-    audio.currentTime = Math.min(Math.max(seconds, 0), audio.duration);
-    setCurrentTime(audio.currentTime);
-  }, []);
-
   const seekToPercent = useCallback((percent: number) => {
     const audio = audioRef.current;
     if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) {
@@ -198,24 +183,14 @@ export function useAudioPlayer() {
     navigator.mediaSession.setActionHandler("pause", pause);
     navigator.mediaSession.setActionHandler("previoustrack", previous);
     navigator.mediaSession.setActionHandler("nexttrack", next);
-    navigator.mediaSession.setActionHandler("seekbackward", () => seekToSeconds(currentTimeRef.current - 10));
-    navigator.mediaSession.setActionHandler("seekforward", () => seekToSeconds(currentTimeRef.current + 10));
-    navigator.mediaSession.setActionHandler("seekto", (details) => {
-      if (typeof details.seekTime === "number") {
-        seekToSeconds(details.seekTime);
-      }
-    });
 
     return () => {
       navigator.mediaSession.setActionHandler("play", null);
       navigator.mediaSession.setActionHandler("pause", null);
       navigator.mediaSession.setActionHandler("previoustrack", null);
       navigator.mediaSession.setActionHandler("nexttrack", null);
-      navigator.mediaSession.setActionHandler("seekbackward", null);
-      navigator.mediaSession.setActionHandler("seekforward", null);
-      navigator.mediaSession.setActionHandler("seekto", null);
     };
-  }, [next, pause, play, previous, seekToSeconds]);
+  }, [next, pause, play, previous]);
 
   return {
     audioRef,
